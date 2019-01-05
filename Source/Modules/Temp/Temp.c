@@ -139,7 +139,6 @@ float Get_Temp_Average(uint8 condition)
 			temp2 = Get_50Adc_DMA_10Average(Receive_ADC_Buffer, 1);
 			temp2 = analog2temp_thermistor(temp2, temptable, NUMTEMPS);
 			temp = temp2;
-			Temper_HOT2= temp2;
 			break;
 
 		case 3:
@@ -196,84 +195,24 @@ void ClearAllpwmValue(void)
 /******************************************************************************/
 void Temp_Monitor (void)
 {
-	switch(Temp_Count)
+	if(Temp_Count)
 	{
-		case 0:
-			/* 关闭加热1 */
+		if(Temper_HOT1 > Control_Temperature)
+		{
+			/* 关闭加热 1 */
 			SetpwmValue(HOT1,0);
-
-			/* 关闭加热 */
-			SetpwmValue(HOT2,0);
-		break;
-
-		case 1:
-			/* 关闭加热2 */
-			SetpwmValue(HOT2,0);
-
-			if(Temper_HOT1 > Control_Temperature)
-			{
-				/* 关闭加热 1 */
-				SetpwmValue(HOT1,0);
-			}
+		}
+		else
+		{
+			if(Temper_HOT1 < Control_Temperature - 4)
+				SetpwmValue(HOT1,100);
 			else
-			{
-				if(Temp_Switch  & 0x01)
-				{
-					/* 四分之一功率加热 */
-					SetpwmValue(HOT1,25);
-				}
-			}
-			break;
-
-		case 2:
-			/* 关闭加热 1*/
-			SetpwmValue(HOT1,0);
-
-			if(Temper_HOT2 > Control_Temperature)
-			{
-				/* 关闭加热2 */
-				SetpwmValue(HOT2,0);
-			}
-			else
-			{
-				if(Temp_Switch  & 0x02)
-				{
-					/* 四分之一功率加热 */
-					SetpwmValue(HOT2,25);
-				}
-			}
-			break;
-
-		case 3:
-			if(Temper_HOT1 > Control_Temperature)
-			{
-				/* 关闭加热 */
-				SetpwmValue(HOT1,0);
-			}
-			else
-			{
-				if(Temp_Switch  & 0x01)
-				{
-					/* 四分之一功率加热 */
-					SetpwmValue(HOT1,25);
-				}
-			}
-
-			if(Temper_HOT2 > Control_Temperature)
-			{
-				/* 关闭加热 */
-				SetpwmValue(HOT2,0);
-			}
-			else
-			{
-				if(Temp_Switch  & 0x02)
-				{
-					/* 四分之一功率加热 */
-					SetpwmValue(HOT2,25);
-				}
-			}
-			break;
-		default:
-			break;
+				SetpwmValue(HOT1,25);
+		}
 	}
+	else
+	{
+		SetpwmValue(HOT1,0);
+	}
+
 }

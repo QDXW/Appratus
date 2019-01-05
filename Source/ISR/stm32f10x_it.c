@@ -27,7 +27,7 @@
 /******************************************************************************/
 uint16 Time_Millisecond2 = 0;
 uint16 Display_second = 0,Time_Millisecond = 0;
-uint8 buf[2]  = {0x09,0x00},tBuffer[8] = {0},Press_COunt = 0;
+uint8 buf[2]  = {0x09,0x00},tBuffer[4] = {0},Press_Count = 0;
 float Temper_Display = 0.0,Temper_Display2 = 0.0;
 
 /******************************************************************************/
@@ -45,16 +45,16 @@ void SysTick_Handler(void)
 
 		/* 发送温度  */
 		memcpy(&tBuffer[0],&Temper_HOT1,4);
-		memcpy(&tBuffer[4],&Temper_HOT2,4);
-		HostComm_Cmd_Send_RawData(8, tBuffer,CMD_CODE_TEMP);
+		HostComm_Cmd_Send_RawData(4, tBuffer,CMD_CODE_TEMP);
 	}
 
-	if(Heat_Status & 0x04)
+	if(Heat_Status)
 	{
 		Time_second++;
 		if(Time_second > Warm_Time)
 		{
 			Warm_Achieve();
+			Heat_Status = 0;
 		}
 	}
 	else
@@ -69,33 +69,16 @@ void TIM4_IRQHandler(void)
 	if (TIM_GetITStatus(TIM4, TIM_IT_Update) != RESET)  	//检查TIM4更新中断发生与否
 	{
 		TIM_ClearITPendingBit(TIM4, TIM_IT_Update);  		//清除TIMx更新中断标志
-		if(!Send_Flag)
+		Time_Millisecond++;
+		if(Time_Millisecond > 3)
 		{
-			if(Temp_Switch != 0)
-			{
-				Time_Millisecond++;
-				if(Time_Millisecond > 3)
-				{
-					Time_Millisecond = 0;
-					Get_Temp_Average(HOT1);
-					Get_Temp_Average(HOT2);
-					Temp_Monitor();
-				}
-			}
-			else
-			{
-				Time_Millisecond2++;
-				if(Time_Millisecond2 > 3)
-				{
-					Time_Millisecond2 = 0;
-					Get_Temp_Average(HOT1);
-					Get_Temp_Average(HOT2);
-				}
-			}
+			Time_Millisecond = 0;
+			Get_Temp_Average(HOT1);
+			Temp_Monitor();
 		}
 	}
 }
- 
+
 /******************************************************************************/
 void EXTI15_10_IRQHandler(void)
 {
@@ -114,8 +97,7 @@ void EXTI15_10_IRQHandler(void)
 		EXTI_ClearITPendingBit(EXTI_Line11);
 		if(GPIO_ReadInputDataBit(PORT_SWITCH_15, PIN_SWITCH_15))
 		{
-			Delay_ms_SW(50);
-			Valve1_Lock(OPEN);
+
 		}
 	}
 
@@ -132,11 +114,22 @@ void EXTI15_10_IRQHandler(void)
 	if(EXTI_GetITStatus(EXTI_Line14) != RESET)
 	{
 		EXTI_ClearITPendingBit(EXTI_Line14);
+		if(GPIO_ReadInputDataBit(PORT_SWITCH_12, PIN_SWITCH_12))
+		{
+			Delay_ms_SW(200);
+			Press_Count = 0;
+			Valve8_Lock(CLOSED);
+		}
 	}
 
 	if(EXTI_GetITStatus(EXTI_Line15) != RESET)
 	{
 		EXTI_ClearITPendingBit(EXTI_Line15);
+		if(GPIO_ReadInputDataBit(PORT_SWITCH_13, PIN_SWITCH_13))
+		{
+			Delay_ms_SW(200);
+			Valve8_Lock(OPEN);
+		}
 	}
 }
 
@@ -173,16 +166,24 @@ void EXTI4_IRQHandler(void)
 {
  	if(EXTI_GetITStatus(EXTI_Line4) != RESET)
 	{
- 		Press_COunt++;
 		EXTI_ClearITPendingBit(EXTI_Line4);
-		if(GPIO_ReadInputDataBit(PORT_SWITCH_1, PIN_SWITCH_1) && 1 == Press_COunt)
+		if(GPIO_ReadInputDataBit(PORT_SWITCH_1, PIN_SWITCH_1))
 		{
-//			buf[1] = 0X00,buf[0] = 0X05;						//滑块挡柱3
-//			Comm_CanDirectSend(STDID_RX_VALVE_LOCK,buf,2);
-//			Delay_ms_SW(10);
-//			Valve6_Lock(OPEN);
-//			Delay_ms_SW(40);
-//			Valve8_Lock(OPEN);
+			Press_Count += 1;
+			if(Press_Count == 2)
+			{
+				Valve6_Lock(OPEN);
+				Valve1_Lock(OPEN);
+				Delay_ms_SW(300);
+				Valve7_Lock(CLOSED);
+				tBuffer[0] = 0X01;
+				HostComm_Cmd_Send_RawData(1, tBuffer,CMD_CODE_CARVE_RESET);
+				APP_Status &= 0xFE;
+			}
+			else
+			{
+				Valve8_Lock(CLOSED);
+			}
 		}
 	}
 }

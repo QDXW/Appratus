@@ -207,250 +207,26 @@ void Pump_Control(PUMP_NUM Pump,FunctionalState status)
 }
 
 /******************************************************************************/
-void Devices_Valve_Action(void)
-{
-	switch(8)
-	{
-		case 8:
-			if(Valve_Lock & 0x80)
-			{
-				Valve8_Action();
-
-				/* 结束当前操作  */
-				Valve_Lock &= 0X7F;
-			}
-		case 7:
-			if(Valve_Lock & 0x40)
-			{
-				Valve7_Action();
-
-				/* 结束当前操作  */
-				Valve_Lock &= 0XBF;
-			}
-
-		case 6:
-			if(Valve_Lock & 0x20)
-			{
-				Valve6_Action();
-
-				/* 结束当前操作  */
-				Valve_Lock &= 0XDF;
-			}
-
-		case 5:
-			if(Valve_Lock & 0x10)
-			{
-				if(L100_Apparatus)
-				{
-//					Valve5_Action();
-
-					/* 结束当前操作  */
-					Valve_Lock &= 0XEF;
-				}
-			}
-
-		case 4:
-			if(Valve_Lock & 0x08)
-			{
-
-//				Valve4_Action();
-				Valve_Lock &= 0XF7;
-			}
-
-		case 3:
-			if(Valve_Lock & 0x04)
-			{
-//				Valve3_Action();
-				Valve_Lock &= 0XFB;
-			}
-
-		case 2:
-			if(Valve_Lock & 0x02)
-			{
-				Valve2_Action();
-			}
-
-		case 1:
-			if(Valve_Lock & 0x01)
-			{
-				Valve1_Action();
-			}
-
-		case 0:
-			break;
-
-		default:
-			break;
-	}
-}
-
-/******************************************************************************/
-void Valve1_Action (void)
-{
-	if(!GPIO_ReadInputDataBit(PORT_SWITCH_5, PIN_SWITCH_5))
-	{
-		/* 阀1移动  */
-		Valve1_Lock(CLOSED);
-		Delay_ms_SW(1500);
-		Valve1_Lock(OPEN);
-
-		/* 结束当前操作  */
-		Valve_Lock &= 0xFE;
-	}
-}
-
-/******************************************************************************/
-void Valve2_Action (void)
-{
-
-	/* 结束当前操作  */
-	Valve_Lock &= 0XFD;
-}
-
-/******************************************************************************/
-void Valve3_Action (void)
+void Devices_Return_Zero(void)
 {
 	uint8 buf[2] = {0x09,0x00};
-//	if(Heat_Status & 0x04)
-	{
-		Valve5_Lock(CLOSED);
-
-		buf[1] = 0X01,buf[0] = 0X05;						//滑块挡柱3
-		Comm_CanDirectSend(STDID_RX_VALVE_LOCK,buf,2);
-
-		/* 运动架6 8 运动  */
-		Valve6_Lock(CLOSED);
-		Delay_ms_SW(800);
-		Valve8_Lock(CLOSED);
-
-		/* 结束当前操作  */
-		Valve_Lock &= 0XFB;
-	}
-}
-
-/******************************************************************************/
-void Valve4_Action (void)
-{
-	uint8 buf[2] = {0x09,0x00};
-
+	Valve1_Lock(OPEN);
+	Valve5_Lock(OPEN);
+	Valve6_Lock(OPEN);
 	Valve7_Lock(OPEN);
-	buf[1] = 0X00,buf[0] = 0X06;							//滑块挡柱4
-	Comm_CanDirectSend(STDID_RX_VALVE_LOCK,buf,2);
-	/* 气缸9运动  */
-	Valve9_Lock(CLOSED);
-	Delay_ms_SW(800);
+	Valve8_Lock(OPEN);
 
-	buf[1] = 0X01,buf[0] = 0X06;							//滑块挡柱4
-	Comm_CanDirectSend(STDID_RX_VALVE_LOCK,buf,2);
+	buf[0] = 1;
+	HostComm_Cmd_Send_RawData(1, buf,CMD_CODE_WARM_BLOCK1);
 
-	Delay_ms_SW(500);
-	Valve9_Lock(OPEN);
-
-//	if(Push_Count)
-//	{
-//		Valve11_Lock(CLOSED);							//Z轴下降
-//		Delay_ms_SW(1000);
-//		Valve11_Lock(OPEN);								//Z轴上升
-//		Delay_ms_SW(500);
-//		Valve10_Lock(CLOSED);							//X轴后退
-//		Delay_ms_SW(2000);
-//		Valve11_Lock(CLOSED);							//Z轴下降
-//		Delay_ms_SW(1000);
-//		Valve11_Lock(OPEN);								//Z轴上升
-//		Delay_ms_SW(1000);
-//		Valve10_Lock(OPEN);								//X轴前进
-//		Delay_ms_SW(1000);
-//
-//		if(Push_Count > 10)
-//		{
-//			Push_Count = 10;
-//		}
-//	}
-//	Push_Count++;
-
-	/* 结束当前操作  */
-	Valve_Lock &= 0XF7;
+	/* 最大功率进行加热 */
+	Start_Temp = 1;
 }
 
 /******************************************************************************/
 void Valve5_Action (void)
 {
-//	Valve5_Lock (CLOSED);
 	Valve4_Lock (CLOSED);
-//	Valve3_Lock (CLOSED);
-
-//	/* 打开风扇  */
-//	buf[1] = 0X01,buf[0] = 0X07;
-//	Comm_CanDirectSend(STDID_RX_VALVE_LOCK,buf,2);
-
-	/* 已经进行过第一次加热  */
-	Heat_Status |=  1<<0;							//第一次加热
-	Heat_Status |=  1<<2;							//第一次加热
-
-	/* 结束当前操作  */
-	Valve_Lock &= 0XEF;
-}
-
-/******************************************************************************/
-void Valve6_Action (void)
-{
-
-}
-
-/******************************************************************************/
-void Valve7_Action (void)
-{
-
-}
-
-/******************************************************************************/
-void Valve8_Action (void)
-{
-
-}
-
-/******************************************************************************/
-void Devices_Return_Zero(void)
-{
-	uint8 buf[2] = {0x09,0x00};
-
-	Valve1_Lock(OPEN);
-	Valve2_Lock(OPEN);
-	Valve3_Lock(OPEN);
-	Valve4_Lock(OPEN);
-	Valve5_Lock(OPEN);
-	Valve6_Lock(OPEN);
-	Valve7_Lock(OPEN);
-	Valve8_Lock(OPEN);
-	Valve9_Lock(OPEN);
-	Valve10_Lock(OPEN);
-	Valve11_Lock(OPEN);
-
-	buf[1] = 0X00,buf[0] = 0X04;						//滑块挡柱1
-	Comm_CanDirectSend(STDID_RX_VALVE_LOCK,buf,2);
-	Delay_ms_SW(5);
-
-	buf[1] = 0X00,buf[0] = 0X03;						//滑块挡柱2
-	Comm_CanDirectSend(STDID_RX_VALVE_LOCK,buf,2);
-	Delay_ms_SW(5);
-
-	buf[1] = 0X00,buf[0] = 0X05;						//滑块挡柱3
-	Comm_CanDirectSend(STDID_RX_VALVE_LOCK,buf,2);
-	Delay_ms_SW(5);
-
-	buf[1] = 0X01,buf[0] = 0X06;						//滑块挡柱4
-	Comm_CanDirectSend(STDID_RX_VALVE_LOCK,buf,2);
-	Delay_ms_SW(5);
-
-	buf[0] = 1;
-	HostComm_Cmd_Send_RawData(1, buf,CMD_CODE_WARM_BLOCK1);
-	Delay_ms_SW(5);
-	HostComm_Cmd_Send_RawData(1, buf,CMD_CODE_WARM_BLOCK2);
-	Delay_ms_SW(5);
-
-	/* 最大功率进行加热 */
-	Start_Temp = 1;
-	L100_Switch = 1;
 }
 
 /******************************************************************************/
@@ -618,21 +394,10 @@ void Valve11_Lock (uint8 status)
 void Warm_Achieve (void)
 {
 	uint8 buf[2]  = {0x09,0x00};
-
 	Valve3_Lock (OPEN);
 	Valve4_Lock (OPEN);
 	Valve5_Lock (OPEN);
-
-	Heat_Status &= 0XFA;
-
-	/* 后方挡柱 */
-	buf[1] = 0X00,buf[0] = 0X04;
-	Comm_CanDirectSend(STDID_RX_VALVE_LOCK,buf,2);
-
-	/* 前方挡柱 */
-	buf[1] = 0X00,buf[0] = 0X03;
-	Comm_CanDirectSend(STDID_RX_VALVE_LOCK,buf,2);
-	Time_second = 0;
 	buf[0] = 0X00;
-	HostComm_Cmd_Send_RawData(1, buf,CMD_CODE_APPARATUS_ACHIEVE);
+	HostComm_Cmd_Send_RawData(1, buf,CMD_CODE_APPARATUS);
+	APP_Status &= 0xFD;
 }

@@ -9,7 +9,7 @@ HostComm_UartRxTypedef HostComm_UartRx;
 /******************************************************************************/
 void HostComm_Process(void)
 {
-	uint8 sBuffer[2] = {1},fBuffer[2] = {0};
+	uint8 sBuffer[2] = {1};
 
 	/* Command type */
 	cmdType = cmdBuffer[OFFSET_CMD_TYPE];
@@ -17,48 +17,23 @@ void HostComm_Process(void)
 	cmdCode = cmdBuffer[OFFSET_CMD_CODE];
 	if ((cmdType == CMD_TYPE_APP) && HostComm_RecBufAvailable)
 	{
-		Send_Flag = 1;
 		switch (cmdCode)
 		{
 		case CMD_CODE_CONNECT:
 				HostComm_Cmd_Send_RawData(1, sBuffer,CMD_CODE_CONNECT);
 			break;
 
-		case CMD_CODE_OPEN:
-			if(Start_Temp)
-			{
-				HostComm_Cmd_Send_RawData(1, fBuffer,CMD_CODE_SUCCESS);
-			}
+		case CMD_CODE_APPARATUS:
+			if(APP_Status & 0x02)
+			{}
 			else
 			{
-				L100_Switch = cmdBuffer[5];
-				HostComm_Cmd_Send_RawData(1, sBuffer,CMD_CODE_SUCCESS);
-			}
-			break;
-
-		case CMD_CODE_APPARATUS:
-			if(!L100_Switch)
-			{
+				APP_Status |= 1<<1;
+				Heat_Status = 1;
 				Valve5_Action();
 				L100_Apparatus = cmdBuffer[5];
-				HostComm_Cmd_Send_RawData(1, sBuffer,CMD_CODE_APPARATUS_ACHIEVE);
+				HostComm_Cmd_Send_RawData(1, sBuffer,CMD_CODE_APPARATUS);
 			}
-			else
-			{
-				HostComm_Cmd_Send_RawData(1, fBuffer,CMD_CODE_APPARATUS_ACHIEVE);
-			}
-			break;
-
-		case CMD_CODE_EXHAUST_AIR:
-			Exhaus_Air_Act();
-			break;
-
-		case CMD_CODE_RECYCLE:
-			Recycle_Bead_Act();
-			break;
-
-		case CMD_CODE_INJECT:
-			Start_Filling();
 			break;
 
 		case CMD_CODE_WARM_TEMP:
@@ -74,92 +49,25 @@ void HostComm_Process(void)
 			Warm_Block1();
 			break;
 
-		case CMD_CODE_WARM_BLOCK2:
-			Warm_Block2();
-			break;
-
-		case CMD_CODE_CARVE_DIRECTION:
-			Carve_Action();
-			break;
-
 		case CMD_CODE_CARVE_RESET:
-			Carve_Action();
+			if(APP_Status & 0x01)
+			{}
+			else
+			{
+				Carve_Action();
+			}
 			break;
 
-		case CMD_CODE_WARM_BUMP:
-			Warm_Bump();
-			break;
-
-		case CMD_CODE_CARVE_BUMP:
-			Carve_Bump();
-			break;
-
-		case CMD_CODE_DEBUG:
-			break;
-
-		case CMD_CODE_NORMAL:
-			break;
-
-		case CMD_CODE_AIR_CYLINDER1:
-			Valve1_Lock(CLOSED);
-			break;
-
-		case CMD_CODE_AIR_CYLINDER2:
-			Valve2_Movement();
-			break;
-
-		case CMD_CODE_AIR_CYLINDER3:
-			Valve3_Movement();
-			break;
-
-		case CMD_CODE_AIR_CYLINDER4:
-			Valve4_Movement();
-			break;
-		case CMD_CODE_PRESS_PLATE:
-			Press_Plate_Movement();
-			break;
-
-		case CMD_CODE_INJUCET_BUMP:
-			Injucet_Bump_Switch();
-			break;
-
-		case CMD_CODE_INJUCET_VOLUME1:
-			Injucet_Volume1();
-			break;
-
-		case CMD_CODE_INJUCET_VOLUME2:
-			Injucet_Volume2();
-			break;
-
-		case CMD_CODE_INJUCET_VOLUME3:
-			Injucet_Volume3();
-			break;
-
-		case CMD_CODE_INJUCET_VOLUME4:
-			Injucet_Volume4();
-			break;
-
-		case CMD_CODE_INJUCET_VOLUME5:
-			Injucet_Volume5();
-			break;
-
-		case CMD_CODE_INJUCET_VOLUME6:
-			Injucet_Volume6();
-			break;
-
-		case CMD_CODE_INJUCET_VOLUME7:
-			Injucet_Volume7();
-			break;
-
-		case CMD_CODE_INJUCET_TIME:
-			Injucet_Time();
-			break;
+//		case CMD_CODE_FACTION_RESET:
+//			Faction_Information();
+//			break;
 
 		default:
 			break;
 		}
-		Send_Flag = 0;
+
 		HostComm_RecBufAvailable = 0;
+		memset(cmdBuffer,0,30);
 	}
 }
 
@@ -213,46 +121,4 @@ uint8 HostComm_Cmd_Send_RawData(uint16 length, uint8 dataBuf[],OFFSET_HOSTCOMM C
 	HostComm_RecBufAvailable = 0;
 	Send_Flag = 0;
 	return 0;
-}
-
-/******************************************************************************/
-void Exhaust_Air_Process (void)
-{
-	uint8 buf[2] = {0,0};
-	if(1 == Exhaust_Air)
-	{
-		/* 开始排空  */
-		buf[0] = 0X01;
-		Comm_CanDirectSend(STDID_EXHAUST_AIR,buf,2);
-		Exhaust_Air = 2;
-	}
-
-	if(0 == Exhaust_Air)
-	{
-		/* 结束排空  */
-		buf[0] = 0X00;
-		Comm_CanDirectSend(STDID_EXHAUST_AIR,buf,2);
-		Exhaust_Air = 2;
-	}
-}
-
-/******************************************************************************/
-void Recycle_Bead_Process (void)
-{
-	uint8 buf[2] = {0,0};
-	if(1 == Recycle_Bead)
-	{
-		/* 开始回收磁珠  */
-		buf[0] = 0X01;
-		Comm_CanDirectSend(STDID_RECYCLE_BEAD,buf,2);
-		Recycle_Bead = 2;
-	}
-
-	if(0 == Recycle_Bead)
-	{
-		/* 停止回收磁珠  */
-		buf[0] = 0X00;
-		Comm_CanDirectSend(STDID_RECYCLE_BEAD,buf,2);
-		Recycle_Bead = 2;
-	}
 }
