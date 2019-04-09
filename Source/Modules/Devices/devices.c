@@ -3,7 +3,6 @@
 
 /******************************************************************************/
 PUMP_NUM Pump;
-uint8 Push_Count = 0,Carve_Flag = 1;
 
 /******************************************************************************/
 void Devices_Init(void)
@@ -207,85 +206,89 @@ void Pump_Control(PUMP_NUM Pump,FunctionalState status)
 }
 
 /******************************************************************************/
-void Devices_Return_Zero(void)
+void Devices_Init_Status(void)
 {
-	uint8 buf[2] = {0x09,0x00};
-	Valve1_Lock(OPEN);
-	Valve5_Lock(OPEN);
-	Valve6_Lock(OPEN);
-	Valve7_Lock(OPEN);
-	Valve8_Lock(OPEN);
+	Valve1_Lock_Warm(CLOSED);
+	Valve2_Lock_Push_Reagent(CLOSED);
+	Valve3_Lock_Press(CLOSED);
+	Valve4_Lock_Scroll(CLOSED);
+	Valve5_Lock(CLOSED);
+	Valve6_Lock(CLOSED);
+	Valve7_Lock(CLOSED);
+	Valve8_Lock(CLOSED);
 
-	buf[0] = 1;
-	HostComm_Cmd_Send_RawData(1, buf,CMD_CODE_WARM_BLOCK1);
+	/* 最大功率加热 */
+	SetpwmValue(HOT1,50);
+	SetpwmValue(HOT2,100);
+	SetpwmValue(HOT3,0);
 
-	/* 最大功率进行加热 */
-	Start_Temp = 1;
+	/* 所有的气缸初始化状态 */
+	Delay_ms_SW(4000);
+	Pump_Press = 0;
+	Push_Rreagent = 0;
+	Scroll_Press_Open = 0;
+	Scroll_Press_Closed = 0;
+	Apparatus_Achieve = 0;
 }
 
 /******************************************************************************/
-void Valve5_Action (void)
-{
-	Valve4_Lock (CLOSED);
-}
-
-/******************************************************************************/
-void Valve1_Lock (uint8 status)
+void Valve1_Lock_Warm (uint8 status)
 {
 	if(status)
 	{
-		Pump_Control(PUMP8,DISABLE);
-		Pump_Control(PUMP9,ENABLE);
-	}
-	else
-	{
-		Pump_Control(PUMP8,ENABLE);
-		Pump_Control(PUMP9,DISABLE);
-	}
-}
-
-/******************************************************************************/
-void Valve2_Lock (uint8 status)
-{
-	if(status)
-	{
-		Pump_Control(PUMP10,DISABLE);
-		Pump_Control(PUMP11,ENABLE);
-	}
-	else
-	{
-		Pump_Control(PUMP10,ENABLE);
-		Pump_Control(PUMP11,DISABLE);
-	}
-}
-
-/******************************************************************************/
-void Valve3_Lock (uint8 status)
-{
-	if(status)
-	{
-		Pump_Control(PUMP2,DISABLE);
-		Pump_Control(PUMP3,ENABLE);
-	}
-	else
-	{
+		Pump_Control(PUMP1,DISABLE);
 		Pump_Control(PUMP2,ENABLE);
-		Pump_Control(PUMP3,DISABLE);
+	}
+	else
+	{
+		Pump_Control(PUMP1,ENABLE);
+		Pump_Control(PUMP2,DISABLE);
 	}
 }
 
 /******************************************************************************/
-void Valve4_Lock (uint8 status)
+void Valve2_Lock_Push_Reagent (uint8 status)
 {
 	if(status)
 	{
+		Pump_Control(PUMP3,ENABLE);
 		Pump_Control(PUMP4,DISABLE);
-		Pump_Control(PUMP5,ENABLE);
 	}
 	else
 	{
+		Pump_Control(PUMP3,DISABLE);
 		Pump_Control(PUMP4,ENABLE);
+	}
+}
+
+/******************************************************************************/
+uint8 Valve3_Lock_Press (uint8 status)
+{
+	if(status)
+	{
+		Pump_Control(PUMP5,ENABLE);
+		Pump_Control(PUMP6,DISABLE);
+	}
+	else
+	{
 		Pump_Control(PUMP5,DISABLE);
+		Pump_Control(PUMP6,ENABLE);
+	}
+	return 0;
+}
+
+/******************************************************************************/
+void Valve4_Lock_Scroll (uint8 status)
+{
+	if(status)
+	{
+		Pump_Control(PUMP7,DISABLE);
+		Pump_Control(PUMP8,ENABLE);
+	}
+	else
+	{
+		Pump_Control(PUMP7,ENABLE);
+		Pump_Control(PUMP8,DISABLE);
 	}
 }
 
@@ -294,13 +297,13 @@ void Valve5_Lock (uint8 status)
 {
 	if(status)
 	{
-		Pump_Control(PUMP6,DISABLE);
-		Pump_Control(PUMP7,ENABLE);
+		Pump_Control(PUMP9,DISABLE);
+		Pump_Control(PUMP10,ENABLE);
 	}
 	else
 	{
-		Pump_Control(PUMP6,ENABLE);
-		Pump_Control(PUMP7,DISABLE);
+		Pump_Control(PUMP9,ENABLE);
+		Pump_Control(PUMP10,DISABLE);
 	}
 }
 
@@ -309,13 +312,13 @@ void Valve6_Lock (uint8 status)
 {
 	if(status)
 	{
-		Pump_Control(PUMP14,DISABLE);
-		Pump_Control(PUMP15,ENABLE);
+		Pump_Control(PUMP11,DISABLE);
+		Pump_Control(PUMP12,ENABLE);
 	}
 	else
 	{
-		Pump_Control(PUMP14,ENABLE);
-		Pump_Control(PUMP15,DISABLE);
+		Pump_Control(PUMP11,ENABLE);
+		Pump_Control(PUMP12,DISABLE);
 	}
 }
 
@@ -324,13 +327,13 @@ void Valve7_Lock (uint8 status)
 {
 	if(status)
 	{
-		Pump_Control(PUMP16,DISABLE);
-		Pump_Control(PUMP17,ENABLE);
+		Pump_Control(PUMP13,DISABLE);
+		Pump_Control(PUMP14,ENABLE);
 	}
 	else
 	{
-		Pump_Control(PUMP16,ENABLE);
-		Pump_Control(PUMP17,DISABLE);
+		Pump_Control(PUMP13,ENABLE);
+		Pump_Control(PUMP14,DISABLE);
 	}
 }
 
@@ -339,13 +342,13 @@ void Valve8_Lock (uint8 status)
 {
 	if(status)
 	{
-		Pump_Control(PUMP18,DISABLE);
-		Pump_Control(PUMP19,ENABLE);
+		Pump_Control(PUMP15,DISABLE);
+		Pump_Control(PUMP16,ENABLE);
 	}
 	else
 	{
-		Pump_Control(PUMP18,ENABLE);
-		Pump_Control(PUMP19,DISABLE);
+		Pump_Control(PUMP15,ENABLE);
+		Pump_Control(PUMP16,DISABLE);
 	}
 }
 
@@ -354,13 +357,13 @@ void Valve9_Lock (uint8 status)
 {
 	if(status)
 	{
-		Pump_Control(PUMP12,DISABLE);
-		Pump_Control(PUMP13,ENABLE);
+		Pump_Control(PUMP17,DISABLE);
+		Pump_Control(PUMP18,ENABLE);
 	}
 	else
 	{
-		Pump_Control(PUMP12,ENABLE);
-		Pump_Control(PUMP13,DISABLE);
+		Pump_Control(PUMP17,ENABLE);
+		Pump_Control(PUMP18,DISABLE);
 	}
 }
 
@@ -369,11 +372,11 @@ void Valve10_Lock (uint8 status)
 {
 	if(status)
 	{
-		Pump_Control(PUMP1,ENABLE);
+		Pump_Control(PUMP19,ENABLE);
 	}
 	else
 	{
-		Pump_Control(PUMP1,DISABLE);
+		Pump_Control(PUMP19,DISABLE);
 	}
 }
 
@@ -388,16 +391,4 @@ void Valve11_Lock (uint8 status)
 	{
 		Pump_Control(PUMP20,DISABLE);
 	}
-}
-
-/******************************************************************************/
-void Warm_Achieve (void)
-{
-	uint8 buf[2]  = {0x09,0x00};
-	Valve3_Lock (OPEN);
-	Valve4_Lock (OPEN);
-	Valve5_Lock (OPEN);
-	buf[0] = 0X00;
-	HostComm_Cmd_Send_RawData(1, buf,CMD_CODE_APPARATUS);
-	APP_Status &= 0xFD;
 }

@@ -127,6 +127,7 @@ void Comm_CanTxDataPut(uint32 stdid, uint8* dataPtr, uint8 len)
 		Comm_CanTxSingleDataPut(stdid, dataPtr, len);
 	}
 }
+
 /******************************************************************************/
 /* 待发送的数据出列并触发CAN发送 */
 ErrorStatus Comm_CanTxDataSend(void)
@@ -224,7 +225,6 @@ void Comm_CAN_SendOnePackage(uint16 stdId, uint8 *dataPtr, uint8 len)
 			(i < 0XFF))
 		i++;
 }
-
 
 /******************************************************************************/
 /* 从FIFO中获取数据并处理 */

@@ -2,7 +2,7 @@
 .\objects\laminating.o: Source\Modules\Laminating\Laminating.h
 .\objects\laminating.o: .\Source\System\stm32f10x.h
 .\objects\laminating.o: .\Source\CORE\core_cm3.h
-.\objects\laminating.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
+.\objects\laminating.o: D:\Keil 5.0\ARM\ARMCC\Bin\..\include\stdint.h
 .\objects\laminating.o: .\Source\System\system_stm32f10x.h
 .\objects\laminating.o: .\Source\System\comDef.h
 .\objects\laminating.o: .\Source\System\stm32f10x_conf.h
@@ -46,11 +46,11 @@
 .\objects\laminating.o: .\Source\Modules\Temp\TempControl.h
 .\objects\laminating.o: .\Source\Modules\Movement\Movement.h
 .\objects\laminating.o: .\Source\Modules\Flash\Flash.h
-.\objects\laminating.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdio.h
+.\objects\laminating.o: D:\Keil 5.0\ARM\ARMCC\Bin\..\include\stdio.h
 .\objects\laminating.o: .\Source\Modules\Comm\Comm.h
 .\objects\laminating.o: .\Source\Modules\Comm\Comm_CAN.h
 .\objects\laminating.o: .\Source\Modules\Temp\Temp.h
 .\objects\laminating.o: .\Source\Modules\adc\adc.h
 .\objects\laminating.o: .\Source\Modules\DMA\dma.h
-.\objects\laminating.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\math.h
-.\objects\laminating.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
+.\objects\laminating.o: D:\Keil 5.0\ARM\ARMCC\Bin\..\include\math.h
+.\objects\laminating.o: D:\Keil 5.0\ARM\ARMCC\Bin\..\include\string.h

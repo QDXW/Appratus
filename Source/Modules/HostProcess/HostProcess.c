@@ -3,37 +3,40 @@
 /******************************************************************************/
 Judge DevicesInit_enable = FALSE;
 LAMINATING Laminating;
+
 /******************************************************************************/
 HostComm_UartRxTypedef HostComm_UartRx;
 
 /******************************************************************************/
 void HostComm_Process(void)
 {
-	uint8 sBuffer[2] = {1};
+	if(HostComm_RecBufAvailable)
+	{
+		HostComm_RecBufAvailable = 0;
+		HostComm_Cmd_Process();
+	}
+}
 
+/******************************************************************************/
+void HostComm_Cmd_Process(void)
+{
 	/* Command type */
 	cmdType = cmdBuffer[OFFSET_CMD_TYPE];
+
 	/* Command code */
 	cmdCode = cmdBuffer[OFFSET_CMD_CODE];
-	if ((cmdType == CMD_TYPE_APP) && HostComm_RecBufAvailable)
+
+	if (cmdType == CMD_TYPE_APP)
 	{
 		switch (cmdCode)
 		{
 		case CMD_CODE_CONNECT:
-				HostComm_Cmd_Send_RawData(1, sBuffer,CMD_CODE_CONNECT);
+			Buffer[0] = 1;
+			HostComm_Cmd_Send_RawData(1, Buffer,CMD_CODE_CONNECT);
 			break;
 
 		case CMD_CODE_APPARATUS:
-			if(APP_Status & 0x02)
-			{}
-			else
-			{
-				APP_Status |= 1<<1;
-				Heat_Status = 1;
-				Valve5_Action();
-				L100_Apparatus = cmdBuffer[5];
-				HostComm_Cmd_Send_RawData(1, sBuffer,CMD_CODE_APPARATUS);
-			}
+			Apparatus_Action();
 			break;
 
 		case CMD_CODE_WARM_TEMP:
@@ -45,29 +48,18 @@ void HostComm_Process(void)
 			Warm_Time = Warm_Time*1000 - 1;
 			break;
 
-		case CMD_CODE_WARM_BLOCK1:
-			Warm_Block1();
+		case CMD_CODE_SCROLL_TIMES:
+			Scroll_Times = cmdBuffer[5];
 			break;
 
-		case CMD_CODE_CARVE_RESET:
-			if(APP_Status & 0x01)
-			{}
-			else
-			{
-				Carve_Action();
-			}
+		case CMD_CODE_SCROLL_PRESS:
+			Scroll_Press();
 			break;
-
-//		case CMD_CODE_FACTION_RESET:
-//			Faction_Information();
-//			break;
 
 		default:
 			break;
 		}
-
-		HostComm_RecBufAvailable = 0;
-		memset(cmdBuffer,0,30);
+		memset(cmdBuffer,0,sizeof(cmdBuffer));
 	}
 }
 
@@ -112,13 +104,10 @@ uint8 HostComm_Cmd_Send_RawData(uint16 length, uint8 dataBuf[],OFFSET_HOSTCOMM C
 	uint16 totalPackageLength = 2; /* Include head and tail */
 	uint16 cmdDataLength = 0;
 
-	Send_Flag = 1;
 	memcpy(&respBuffer[OFFSET_CMD_DATA], dataBuf, length);
 	cmdDataLength = length;
 	totalPackageLength += HostComm_Cmd_Respond_Common(cmdDataLength,
 							CMD_TYPE_APP, CMD_CODE);
 	HostComm_SendCommand(&respBuffer[0], totalPackageLength);
-	HostComm_RecBufAvailable = 0;
-	Send_Flag = 0;
 	return 0;
 }

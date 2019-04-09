@@ -195,24 +195,29 @@ void ClearAllpwmValue(void)
 /******************************************************************************/
 void Temp_Monitor (void)
 {
-	if(Temp_Count)
+	float Difference_Value = 0;
+	if(Temper_HOT1 > Control_Temperature)
 	{
-		if(Temper_HOT1 > Control_Temperature)
-		{
-			/* 关闭加热 1 */
-			SetpwmValue(HOT1,0);
-		}
-		else
-		{
-			if(Temper_HOT1 < Control_Temperature - 4)
-				SetpwmValue(HOT1,100);
-			else
-				SetpwmValue(HOT1,25);
-		}
+		/* 温度过高  */
+//		Difference_Value = (Temper_HOT1 * 10.0) - (((float)Control_Temperature) * 10.0);
+//		SetpwmValue(HOT1,Calculate_Value(1, Difference_Value));
+		SetpwmValue(HOT1,0);
 	}
 	else
 	{
-		SetpwmValue(HOT1,0);
+//		/* 温度过低  */
+//		Difference_Value = (((float)Control_Temperature) * 10.0) - (Temper_HOT1 * 10.0);
+//		SetpwmValue(HOT1,Calculate_Value(0,Difference_Value));
+		SetpwmValue(HOT1,100);
 	}
+}
 
+/******************************************************************************/
+uint16 Calculate_Value(uint8 Status,float Difference_Value)
+{
+	uint16 Value = 0;
+	Value = (Status)?((Difference_Value <= 5.0)?(20.0 - 4*Difference_Value):0):
+			((Difference_Value <= 20.0)?Difference_Value:100);
+
+	return Value;
 }

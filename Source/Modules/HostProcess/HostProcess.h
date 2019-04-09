@@ -34,29 +34,28 @@ typedef enum
 	CMD_CODE_CONNECT,
 	CMD_CODE_WARM_TEMP,
 	CMD_CODE_WARM_TIME,
-	CMD_CODE_CARVE_RESET,
-	CMD_CODE_INJUCET_TIME,
-	CMD_CODE_WARM_BLOCK1,
-	CMD_CODE_FACTION_RESET,
+	CMD_CODE_SCROLL_TIMES,
+	CMD_CODE_SCROLL_PRESS,
 
 } OFFSET_HOSTCOMM;
+
 /******************************************************************************/
 typedef struct{
 	uint8 PumpControlSR;
 
 } LAMINATING;
 
-
-extern LAMINATING Laminating;
 /******************************************************************************/
 extern HostComm_UartRxTypedef HostComm_UartRx;
-
 extern Judge DevicesInit_enable;
 extern Judge TEMP_HEAT_START;
+extern LAMINATING Laminating;
+
 /******************************************************************************/
 extern void HostComm_Process(void);
-extern uint8 HostComm_Cmd_Send_RawData(uint16 length, uint8 dataBuf[],OFFSET_HOSTCOMM CMD_CODE);
 extern void Exhaust_Air_Process(void);
 extern void Recycle_Bead_Process(void);
+extern void HostComm_Cmd_Process (void);
+extern uint8 HostComm_Cmd_Send_RawData(uint16 length, uint8 dataBuf[],OFFSET_HOSTCOMM CMD_CODE);
 
 #endif

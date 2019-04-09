@@ -12,8 +12,9 @@
 #include "Project_File.h"
 
 /******************************************************************************/
-extern void Warm_Block1(void);
-extern void Carve_Action(void);
-extern void Faction_Information (void);
+extern void Scroll_Press (void);
+extern void Apparatus_Action (void);
+extern void Apparatus_Devices (void);
+
 
 #endif /* MODULES_DEVICES_DEVICE_ACTION_H_ */

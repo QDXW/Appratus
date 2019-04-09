@@ -110,14 +110,14 @@ extern uint32 Count;
 
 /******************************************************************************/
 extern void Devices_Init(void);
-extern void Devices_Return_Zero(void);
+extern void Devices_Init_Status(void);
 extern void Devices_Valve_Action(void);
 extern void Pump_Control(PUMP_NUM Pump,FunctionalState status);
 
-extern void Valve1_Lock (uint8 status);
-extern void Valve2_Lock (uint8 status);
-extern void Valve3_Lock (uint8 status);
-extern void Valve4_Lock (uint8 status);
+extern void Valve1_Lock_Warm (uint8 status);
+extern void Valve2_Lock_Push_Reagent (uint8 status);
+extern uint8 Valve3_Lock_Press (uint8 status);
+extern void Valve4_Lock_Scroll (uint8 status);
 extern void Valve5_Lock (uint8 status);
 extern void Valve6_Lock (uint8 status);
 extern void Valve7_Lock (uint8 status);
@@ -125,16 +125,6 @@ extern void Valve8_Lock (uint8 status);
 extern void Valve9_Lock (uint8 status);
 extern void Valve10_Lock (uint8 status);
 extern void Valve11_Lock (uint8 status);
-
-extern void Warm_Achieve (void);
-extern void Valve1_Action (void);
-extern void Valve2_Action (void);
-extern void Valve3_Action (void);
-extern void Valve4_Action (void);
-extern void Valve5_Action (void);
-extern void Valve6_Action (void);
-extern void Valve7_Action (void);
-extern void Valve8_Action (void);
 
 
 #endif

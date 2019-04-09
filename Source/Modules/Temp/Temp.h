@@ -40,15 +40,15 @@ typedef enum
 #define PIN_TEMP_HEAT_CTR_3    (GPIO_Pin_3)
 
 /***********************************************************************/
-extern void TempPwm_Init(void);
-extern void SetpwmValue(uint8 ch, uint16 pwmvalue);
-extern void ClearAllpwmValue(void);
 extern void TestPwmValue(void);
-extern float Get_Temp_Average(uint8 condition);
-extern float analog2temp_thermistor(int raw,const float table[][2], int numtemps);
-extern void PIDAutoRegulation_Init(void);
+extern void TempPwm_Init(void);
 extern void Temp_Monitor (void);
-
+extern void ClearAllpwmValue(void);
+extern void PIDAutoRegulation_Init(void);
+extern float Get_Temp_Average(uint8 condition);
+extern void SetpwmValue(uint8 ch, uint16 pwmvalue);
+extern uint16 Calculate_Value(uint8 Status,float Difference_Value);
+extern float analog2temp_thermistor(int raw,const float table[][2], int numtemps);
 
 #endif
 

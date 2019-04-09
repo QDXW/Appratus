@@ -10,7 +10,6 @@
 
 
 /******************************************************************************/
-extern void Judge_Temp (void);
 extern void Open_Device (void);
 
 

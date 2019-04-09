@@ -26,7 +26,6 @@
 ".\objects\devices.o"
 ".\objects\sensor.o"
 ".\objects\tempcontrol.o"
-".\objects\movement.o"
 ".\objects\flash.o"
 ".\objects\crc16.o"
 ".\objects\hostcomm.o"

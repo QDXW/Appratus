@@ -11,15 +11,20 @@
 /******************************************************************************/
 #include "Project_File.h"
 
-/******************************************************************************/
-extern uint8 Valve_Lock,Temp_Switch,Heat_Status,Start_Temp,L100_Switch;
-extern uint8 respBuffer[30],HostComm_RecBufAvailable,L100_Apparatus;
-extern uint8 cmdType,cmdCode,recBuffer[30],cmdBuffer[30],contReceive;
-extern uint8 Temp_Count,Send_Flag,Bump_Switch,APP_Status;
+/**************************USB Í¨ÐÅ********************************************/
+extern uint8 respBuffer[512],HostComm_RecBufAvailable;
+extern uint8 cmdType,cmdCode,recBuffer[512],cmdBuffer[512],contReceive;
 
-extern uint16 recCount,HostComm_RecBufSize,cmdLength,respLength,Fiber_Optic;
-extern uint16 Warm_Time,Time_second,Control_Temperature;
+extern uint16 recCount,HostComm_RecBufSize,cmdLength,respLength;
 
-extern float Temper,Temper_HOT1;
+/***************************¸²Ä¤***********************************************/
+extern uint8 Start_Apparatus,Buffer[100],Scroll_Times;
+extern uint8 Scroll_Press_Closed,Scroll_Press_Times,Push_Rreagent;
+extern uint8 Apparatus_Achieve,Pump_Press,Scroll_Press_Open,Push_Rreagent;
+extern uint8 Get_Warm_Flag;
+
+extern uint16 Warm_Time,Control_Temperature,Touch_Action;
+
+extern float Temper_HOT1;
 
 #endif /* SYSTEM_GLOBAL_VARIABLE_H_ */

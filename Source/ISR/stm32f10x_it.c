@@ -25,10 +25,9 @@
 #include "stm32f10x_it.h" 
 
 /******************************************************************************/
-uint16 Time_Millisecond2 = 0;
-uint16 Display_second = 0,Time_Millisecond = 0;
-uint8 buf[2]  = {0x09,0x00},tBuffer[4] = {0},Press_Count = 0;
-float Temper_Display = 0.0,Temper_Display2 = 0.0;
+uint16 Display_second = 0;
+uint16 Apparatus_Second = 0,Time_Millisecond = 0;
+uint16 Touch_Interval_Millisecond = 0;
 
 /******************************************************************************/
 void SysTick_Handler(void)
@@ -39,27 +38,31 @@ void SysTick_Handler(void)
 
 	/* 串口发送温度数据 */
 	Display_second++;
-	if(Display_second > 499)
+	if(Display_second > 599)
 	{
 		Display_second = 0;
 
 		/* 发送温度  */
-		memcpy(&tBuffer[0],&Temper_HOT1,4);
-		HostComm_Cmd_Send_RawData(4, tBuffer,CMD_CODE_TEMP);
+		memcpy(&Buffer[0],&Temper_HOT1,4);
+
+		if(!Get_Warm_Flag)
+			HostComm_Cmd_Send_RawData(8, Buffer,CMD_CODE_TEMP);
 	}
 
-	if(Heat_Status)
+	if(Start_Apparatus)
 	{
-		Time_second++;
-		if(Time_second > Warm_Time)
+		Apparatus_Second++;
+		if(Apparatus_Second > (Warm_Time-1))
 		{
-			Warm_Achieve();
-			Heat_Status = 0;
+			Apparatus_Second = 0;
+			Valve1_Lock_Warm(CLOSED);
+			Start_Apparatus = 0;
+			Push_Rreagent = 1;
 		}
 	}
 	else
 	{
-		Time_second = 0;
+		Apparatus_Second = 0;
 	}
 }
 
@@ -69,12 +72,19 @@ void TIM4_IRQHandler(void)
 	if (TIM_GetITStatus(TIM4, TIM_IT_Update) != RESET)  	//检查TIM4更新中断发生与否
 	{
 		TIM_ClearITPendingBit(TIM4, TIM_IT_Update);  		//清除TIMx更新中断标志
-		Time_Millisecond++;
-		if(Time_Millisecond > 3)
+		if(!Touch_Action)
 		{
-			Time_Millisecond = 0;
-			Get_Temp_Average(HOT1);
-			Temp_Monitor();
+			Time_Millisecond++;
+			if(Time_Millisecond > 4)
+			{
+				Time_Millisecond = 0;
+
+				Get_Warm_Flag = 1;
+				Get_Temp_Average(HOT1);
+				Get_Warm_Flag = 0;
+
+//				Temp_Monitor();
+			}
 		}
 	}
 }
@@ -85,24 +95,17 @@ void EXTI15_10_IRQHandler(void)
 	if(EXTI_GetITStatus(EXTI_Line10) != RESET)
 	{
 		EXTI_ClearITPendingBit(EXTI_Line10);
-		if(GPIO_ReadInputDataBit(PORT_SWITCH_14, PIN_SWITCH_14))
-		{
-			Delay_ms_SW(50);
-			Valve7_Lock(OPEN);
-		}
 	}
 
 	if(EXTI_GetITStatus(EXTI_Line11) != RESET)
 	{
 		EXTI_ClearITPendingBit(EXTI_Line11);
-		if(GPIO_ReadInputDataBit(PORT_SWITCH_15, PIN_SWITCH_15))
-		{
-
-		}
 	}
 
 	if(EXTI_GetITStatus(EXTI_Line12) != RESET)
 	{
+		Delay_ms_SW(50);
+		Apparatus_Achieve = (GPIO_ReadInputDataBit(GPIOE, GPIO_Pin_12))?1:0;
 		EXTI_ClearITPendingBit(EXTI_Line12);
 	}
 
@@ -114,22 +117,11 @@ void EXTI15_10_IRQHandler(void)
 	if(EXTI_GetITStatus(EXTI_Line14) != RESET)
 	{
 		EXTI_ClearITPendingBit(EXTI_Line14);
-		if(GPIO_ReadInputDataBit(PORT_SWITCH_12, PIN_SWITCH_12))
-		{
-			Delay_ms_SW(200);
-			Press_Count = 0;
-			Valve8_Lock(CLOSED);
-		}
 	}
 
 	if(EXTI_GetITStatus(EXTI_Line15) != RESET)
 	{
 		EXTI_ClearITPendingBit(EXTI_Line15);
-		if(GPIO_ReadInputDataBit(PORT_SWITCH_13, PIN_SWITCH_13))
-		{
-			Delay_ms_SW(200);
-			Valve8_Lock(OPEN);
-		}
 	}
 }
 
@@ -139,24 +131,24 @@ void EXTI9_5_IRQHandler(void)
 	if(EXTI_GetITStatus(EXTI_Line5) != RESET)
 	{
 		EXTI_ClearITPendingBit(EXTI_Line5);
-		Valve_Lock |= GPIO_ReadInputDataBit(PORT_SWITCH_2, PIN_SWITCH_2)?(1<<4):(0<<4);
-		Valve7_Lock(OPEN);
 	}
 
 	if(EXTI_GetITStatus(EXTI_Line7) != RESET)
 	{
+		Delay_ms_SW(50);
+		Scroll_Press_Open = (GPIO_ReadInputDataBit(GPIOE, GPIO_Pin_7))?1:0;
 		EXTI_ClearITPendingBit(EXTI_Line7);
-		Valve_Lock |= GPIO_ReadInputDataBit(PORT_SWITCH_5, PIN_SWITCH_5)?(1<<1):( 0<<1);
 	}
 
 	if(EXTI_GetITStatus(EXTI_Line8) != RESET)
 	{
 		EXTI_ClearITPendingBit(EXTI_Line8);
-		Valve_Lock |= GPIO_ReadInputDataBit(PORT_SWITCH_6, PIN_SWITCH_6)?(1<<0):( 0<<0);
 	}
 
 	if(EXTI_GetITStatus(EXTI_Line9) != RESET)
 	{
+		Delay_ms_SW(50);
+		Scroll_Press_Closed = (GPIO_ReadInputDataBit(GPIOE, GPIO_Pin_9))?1:0;
 		EXTI_ClearITPendingBit(EXTI_Line9);
 	}
 }
@@ -166,25 +158,9 @@ void EXTI4_IRQHandler(void)
 {
  	if(EXTI_GetITStatus(EXTI_Line4) != RESET)
 	{
-		EXTI_ClearITPendingBit(EXTI_Line4);
-		if(GPIO_ReadInputDataBit(PORT_SWITCH_1, PIN_SWITCH_1))
-		{
-			Press_Count += 1;
-			if(Press_Count == 2)
-			{
-				Valve6_Lock(OPEN);
-				Valve1_Lock(OPEN);
-				Delay_ms_SW(300);
-				Valve7_Lock(CLOSED);
-				tBuffer[0] = 0X01;
-				HostComm_Cmd_Send_RawData(1, tBuffer,CMD_CODE_CARVE_RESET);
-				APP_Status &= 0xFE;
-			}
-			else
-			{
-				Valve8_Lock(CLOSED);
-			}
-		}
+ 		Delay_ms_SW(50);
+		Pump_Press = (GPIO_ReadInputDataBit(GPIOC, GPIO_Pin_4))?1:0;
+ 		EXTI_ClearITPendingBit(EXTI_Line4);
 	}
 }
 
@@ -194,7 +170,6 @@ void EXTI1_IRQHandler(void)
 	if(EXTI_GetITStatus(EXTI_Line1) != RESET)
 	{
 		EXTI_ClearITPendingBit(EXTI_Line1);
-		Valve_Lock |= GPIO_ReadInputDataBit(PORT_SWITCH_4, PIN_SWITCH_4)?(1<<2):(0<<2);
 	}
 }
 
@@ -203,8 +178,9 @@ void EXTI0_IRQHandler(void)
 {
 	if(EXTI_GetITStatus(EXTI_Line0) != RESET)
 	{
+		Delay_ms_SW(50);
+		Scroll_Press_Open = (GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_0))?1:0;
 		EXTI_ClearITPendingBit(EXTI_Line0);
-		Valve_Lock |= GPIO_ReadInputDataBit(PORT_SWITCH_3, PIN_SWITCH_3)?(1<<3):(0<<3);
 	}
 }
 

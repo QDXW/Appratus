@@ -78,7 +78,7 @@ static void HostComm_TimeOut_Init(void)
 	TIM_ITConfig(TIM_HOSTCOMM_TIMEOUT, TIM_IT_Update, ENABLE);
 
 	NVIC_InitStructure.NVIC_IRQChannel = TIM_TIMEOUT_IRQ;
-	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
 	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStructure);
@@ -150,6 +150,12 @@ void USART1_IRQHandler(void)
 			recBuffer[recCount++] = RX_dat;
 		}
 
+		if(recCount > 511)
+		{
+			memset(recBuffer,0,sizeof(recBuffer));
+			recCount = 0;
+		}
+
 		/* Get the package length: header + data + tail */
 		if (recCount >= 3)
 		{
@@ -178,6 +184,7 @@ void USART1_IRQHandler(void)
 	USART_ClearITPendingBit(USART1,USART_IT_RXNE);
 }
 
+/******************************************************************************/
 int fputc(int ch, FILE *f)
 {
 	USART_SendData(USART1, (uint8_t) ch);

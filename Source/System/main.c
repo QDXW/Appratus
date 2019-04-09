@@ -2,9 +2,6 @@
 #include "Project_File.h"
 
 /******************************************************************************/
-uint8 Temptertuer = 0;
-
-/******************************************************************************/
 int main(void)
 {
 	SysTick_Init();
@@ -21,26 +18,15 @@ int main(void)
 
 	TempControl_Init();
 
-	Devices_Return_Zero();
-
-	Judge_Temp();
+	/* 初始状态 */
+	Devices_Init_Status();
 
 	while(1)
 	{
 		HostComm_Process();
 		Comm_Process();
-	}
-}
 
-/******************************************************************************/
-void Judge_Temp (void)
-{
-	/* 温度未到180°时不执行程序  */
-	while(Start_Temp)
-	{
-		HostComm_Process();
-
-		/* 温度检测处理  */
-		Start_Temp |= (Temper_HOT1 >= Control_Temperature)?(0<<0):(1<<0);
+		/* 覆膜流程 */
+		Apparatus_Devices();
 	}
 }
